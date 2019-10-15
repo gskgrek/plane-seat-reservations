@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8" />
+    <title></title>
+</head>
+<body>
+
+<div id="results">
+
+</div>
+
+<script type="application/javascript">
+
+    let $results = document.getElementById('results');
+	
+	let seats = ['A', 'B', 'C', '#', 'D', 'E', 'F', 'G', '#', 'H', 'J', 'K']; // map of seats in a row (# is for space between groups)
+    let side_by_side_length = 3; // number of free seats needed to be next to each other
+
+	let seats_length = seats.length; // length of seats array
+    // calculate number of seats in a row
+	let number_of_seats = seats_length;
+	for( let i=0; i<seats_length; i++ ){
+	    if( seats[i] === '#' ){
+	        number_of_seats--;
+        }
+    }
+
+	function solution(N, S){
+
+	    // if there are no reservations calculate maximum available groups of seats for 1 row and multiply by number of rows
+		if( S === '' ){
+			return N * solution(1, '2A');
+		}
+
+		let available = 0; // available groups of seats
+
+		let reservations = S.split(' '); // convert list of reservations to array for easier later use
+		const reservations_length = reservations.length; // remember length as it is constant
+
+        // if the number of reservations is grater than the number of seats minus side by side group length, than we certainly do not have any available groups of seats
+		if( reservations_length > N * number_of_seats - side_by_side_length ){
+		    return 0;
+        }
+
+		// sort reservations
+        const collator = new Intl.Collator(undefined, {usage: 'sort', numeric: true, sensitivity: 'base'}); // we have to use internationalization api because "20A" has to be greater than "3A"
+        reservations = reservations.sort(collator.compare);
+
+		let start = 0; // starting index for reservations array. As it is sorted array we can move starting point forward when we know we checked whole row
+        let cnt; // number of free seats in group of seats in row
+        let p; // position indicator (helper index)
+
+        // lets check each row
+        for( let i=1; i<=N; i++ ){
+
+            // at start of each row we reset free seats counter
+		    cnt = 0;
+
+		    // in a single row we check each seat
+            for( let j=0; j<seats_length; j++ ){
+
+                if( seats[j] === '#' ){
+                    // if it is space between seats groups we reset free seats counter and move to next group
+                    cnt = 0;
+                }else {
+                    p = reservations.indexOf(i+seats[j], start);
+                    if( p > -1 ){
+                        // if reservations list contains current row and seat number we reset free seats counter and move starting point for later search by 1 place
+                        start = p + 1;
+                        cnt = 0;
+                    }else{
+                        // if reservations list doesn't contain current row and seat we increment free seats counter
+                        cnt++;
+                        if( cnt >= side_by_side_length ){
+                            // if we counted enough free seats, than we increment available free seats groups counter, reset free seats counter and move to next seat check
+                            available++;
+                            cnt = 0;
+                        }
+                    }
+                }
+
+            }
+
+		}
+
+		return available;
+	}
+
+    let test_cases = [
+        {
+            n: 1,
+            s: '1A 1F 1C',
+            r: 1,
+        },
+        {
+            n: 2,
+            s: '1A 2F 1C',
+            r: 4,
+        },
+        {
+            n: 1,
+            s: '1A 2F 1C',
+            r: 2,
+        },
+        {
+            n: 2,
+            s: '1A 2F 1D 2B 1J',
+            r: 2,
+        },
+        {
+            n: 20,
+            s: '1A 2F 3D 4B 5J',
+            r: 56,
+        },
+        {
+            n: 50,
+            s: '1A',
+            r: 149,
+        },
+        {
+            n: 50,
+            s: '1A 1B 1C 1D 1E 1F 1G 1H 1J 1K 2A 2B 2C 2D 2E 2F 2G 2H 2J 2K 3A 3B 3C 3D 3E 3F 3G 3H 3J 3K 4A 4B 4C 4D 4E 4F 4G 4H 4J 4K 5A 5B 5C 5D 5E 5F 5G 5H 5J 5K 6A 6B 6C 6D 6E 6F 6G 6H 6J 6K 7A 7B 7C 7D 7E 7F 7G 7H 7J 7K 8A 8B 8C 8D 8E 8F 8G 8H 8J 8K 9A 9B 9C 9D 9E 9F 9G 9H 9J 9K 10A 10B 10C 10D 10E 10F 10G 10H 10J 10K 11A 11B 11C 11D 11E 11F 11G 11H 11J 11K 12A 12B 12C 12D 12E 12F 12G 12H 12J 12K 13A 13B 13C 13D 13E 13F 13G 13H 13J 13K 14A 14B 14C 14D 14E 14F 14G 14H 14J 14K 15A 15B 15C 15D 15E 15F 15G 15H 15J 15K 16A 16B 16C 16D 16E 16F 16G 16H 16J 16K 17A 17B 17C 17D 17E 17F 17G 17H 17J 17K 18A 18B 18C 18D 18E 18F 18G 18H 18J 18K 19A 19B 19C 19D 19E 19F 19G 19H 19J 19K 20A 20B 20C 20D 20E 20F 20G 20H 20J 20K 21A 21B 21C 21D 21E 21F 21G 21H 21J 21K 22A 22B 22C 22D 22E 22F 22G 22H 22J 22K 23A 23B 23C 23D 23E 23F 23G 23H 23J 23K 24A 24B 24C 24D 24E 24F 24G 24H 24J 24K 25A 25B 25C 25D 25E 25F 25G 25H 25J 25K 26A 26B 26C 26D 26E 26F 26G 26H 26J 26K 27A 27B 27C 27D 27E 27F 27G 27H 27J 27K 28A 28B 28C 28D 28E 28F 28G 28H 28J 28K 29A 29B 29C 29D 29E 29F 29G 29H 29J 29K 30A 30B 30C 30D 30E 30F 30G 30H 30J 30K 31A 31B 31C 31D 31E 31F 31G 31H 31J 31K 32A 32B 32C 32D 32E 32F 32G 32H 32J 32K 33A 33B 33C 33D 33E 33F 33G 33H 33J 33K 34A 34B 34C 34D 34E 34F 34G 34H 34J 34K 35A 35B 35C 35D 35E 35F 35G 35H 35J 35K 36A 36B 36C 36D 36E 36F 36G 36H 36J 36K 37A 37B 37C 37D 37E 37F 37G 37H 37J 37K 38A 38B 38C 38D 38E 38F 38G 38H 38J 38K 39A 39B 39C 39D 39E 39F 39G 39H 39J 39K 40A 40B 40C 40D 40E 40F 40G 40H 40J 40K 41A 41B 41C 41D 41E 41F 41G 41H 41J 41K 42A 42B 42C 42D 42E 42F 42G 42H 42J 42K 43A 43B 43C 43D 43E 43F 43G 43H 43J 43K 44A 44B 44C 44D 44E 44F 44G 44H 44J 44K 45A 45B 45C 45D 45E 45F 45G 45H 45J 45K 46A 46B 46C 46D 46E 46F 46G 46H 46J 46K 47A 47B 47C 47D 47E 47F 47G 47H 47J 47K 48A 48B 48C 48D 48E 48F 48G 48H 48J 48K 49A 49B 49C 49D 49E 49F 49G 49H 49J 49K',
+            r: 3,
+        },
+        {
+            n: 50,
+            s: '1A 1B 1C 1D 1E 1F 1G 1H 1J 1K 2A 2B 2C 2D 2E 2F 2G 2H 2J 2K 3A 3B 3C 3D 3E 3F 3G 3H 3J 3K 4A 4B 4C 4D 4E 4F 4G 4H 4J 4K 5A 5B 5C 5D 5E 5F 5G 5H 5J 5K 6A 6B 6C 6D 6E 6F 6G 6H 6J 6K 7A 7B 7C 7D 7E 7F 7G 7H 7J 7K 8A 8B 8C 8D 8E 8F 8G 8H 8J 8K 9A 9B 9C 9D 9E 9F 9G 9H 9J 9K 10A 10B 10C 10D 10E 10F 10G 10H 10J 10K 11A 11B 11C 11D 11E 11F 11G 11H 11J 11K 12A 12B 12C 12D 12E 12F 12G 12H 12J 12K 13A 13B 13C 13D 13E 13F 13G 13H 13J 13K 14A 14B 14C 14D 14E 14F 14G 14H 14J 14K 15A 15B 15C 15D 15E 15F 15G 15H 15J 15K 16A 16B 16C 16D 16E 16F 16G 16H 16J 16K 17A 17B 17C 17D 17E 17F 17G 17H 17J 17K 18A 18B 18C 18D 18E 18F 18G 18H 18J 18K 19A 19B 19C 19D 19E 19F 19G 19H 19J 19K 20A 20B 20C 20D 20E 20F 20G 20H 20J 20K 21A 21B 21C 21D 21E 21F 21G 21H 21J 21K 22A 22B 22C 22D 22E 22F 22G 22H 22J 22K 23A 23B 23C 23D 23E 23F 23G 23H 23J 23K 24A 24B 24C 24D 24E 24F 24G 24H 24J 24K 25A 25B 25C 25D 25E 25F 25G 25H 25J 25K 26A 26B 26C 26D 26E 26F 26G 26H 26J 26K 27A 27B 27C 27D 27E 27F 27G 27H 27J 27K 28A 28B 28C 28D 28E 28F 28G 28H 28J 28K 29A 29B 29C 29D 29E 29F 29G 29H 29J 29K 30A 30B 30C 30D 30E 30F 30G 30H 30J 30K 31A 31B 31C 31D 31E 31F 31G 31H 31J 31K 32A 32B 32C 32D 32E 32F 32G 32H 32J 32K 33A 33B 33C 33D 33E 33F 33G 33H 33J 33K 34A 34B 34C 34D 34E 34F 34G 34H 34J 34K 35A 35B 35C 35D 35E 35F 35G 35H 35J 35K 36A 36B 36C 36D 36E 36F 36G 36H 36J 36K 37A 37B 37C 37D 37E 37F 37G 37H 37J 37K 38A 38B 38C 38D 38E 38F 38G 38H 38J 38K 39A 39B 39C 39D 39E 39F 39G 39H 39J 39K 40A 40B 40C 40D 40E 40F 40G 40H 40J 40K 41A 41B 41C 41D 41E 41F 41G 41H 41J 41K 42A 42B 42C 42D 42E 42F 42G 42H 42J 42K 43A 43B 43C 43D 43E 43F 43G 43H 43J 43K 44A 44B 44C 44D 44E 44F 44G 44H 44J 44K 45A 45B 45C 45D 45E 45F 45G 45H 45J 45K 46A 46B 46C 46D 46E 46F 46G 46H 46J 46K 47A 47B 47C 47D 47E 47F 47G 47H 47J 47K 48A 48B 48C 48D 48E 48F 48G 48H 48J 48K 49A 49B 49C 49D 49E 49F 49G 49H 49J 49K 50A 50B 50C 50D 50E 50F 50G 50H 50J 50K',
+            r: 0,
+        },
+    ];
+
+    for( let i=0; i<test_cases.length; i++ ){
+        let test = test_cases[i];
+        $results.innerHTML += 'N = ' + test.n + '<br>';
+        $results.innerHTML += 'S = ' + test.s + '<br>';
+        let r;
+        let t0 = performance.now();
+        for( let j=0; j<1000; j++ ) {
+            r = solution(test.n, test.s);
+        }
+        let t1 = performance.now();
+        if( r === test.r ){
+            $results.innerHTML += r + ' -> <b style="color: #00FF00;">true</b> (expected: ' + test.r + ') in ' + (t1 - t0) + 'ms<br>';
+        }else{
+            $results.innerHTML += r + ' -> <b style="color: #FF0000;">false</b> (expected: ' + test.r + ') in ' + (t1 - t0) + 'ms<br>';
+        }
+        $results.innerHTML += '<br>';
+    }
+
+</script>
+
+</body>
+</html>
